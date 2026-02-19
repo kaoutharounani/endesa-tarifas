@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendador de Tarifas Endesa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .tool-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            color: #0056b3;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            background-color: #0056b3;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #004494;
+        }
+        #results {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            display: none;
+        }
+        .tariff-card {
+            background-color: #e9f2fb;
+            border-left: 5px solid #0056b3;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .tariff-card h4 {
+            margin: 0 0 10px 0;
+            color: #0056b3;
+        }
+        .tariff-card a {
+            display: inline-block;
+            text-decoration: none;
+            background-color: #0056b3;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .tariff-card a:hover {
+            background-color: #004494;
+        }
+    </style>
+</head>
+<body>
+
+<div class="tool-container">
+    <h2>Encuentra tu Tarifa Ideal</h2>
+    
+    <label for="supply-type">¿Qué suministro buscas?</label>
+    <select id="supply-type" onchange="updateOptions()">
+        <option value="luz">Luz</option>
+        <option value="gas">Gas</option>
+    </select>
+
+    <label for="tariff-type">Tipo de tarifa deseada:</label>
+    <select id="tariff-type">
+        <option value="fija">Fija</option>
+        <option value="variable">Variable</option>
+        <option value="dual">Dual</option>
+        <option value="indexada">Indexada</option>
+    </select>
+
+    <label for="consumption">Tu consumo estimado anual (kWh):</label>
+    <input type="number" id="consumption" placeholder="Ej: 3000" min="0">
+
+    <button onclick="getRecommendations()">Ver Tarifas Recomendadas</button>
+
+    <div id="results">
+        <h3>Te recomendamos las siguientes tarifas:</h3>
+        <div id="recommendation-list"></div>
+    </div>
+</div>
+
+<script>
+    // URLs de Papernest a usar
+    const urls = {
+        tarifaLibre: "https://www.papernest.es/endesa/tarifas/tarifa-libre/",
+        conectaLuz: "https://www.papernest.es/endesa/tarifas/conecta-luz/",
+        tempo24h: "https://www.papernest.es/endesa/tarifas/tempo/24-horas/",
+        tarifaPvpc: "https://www.papernest.es/endesa/tarifas/tarifa-pvpc/",
+        oneLuz: "https://www.papernest.es/endesa/tarifas/one-luz/",
+        tarifaUnica: "https://www.papernest.es/endesa/tarifas/tarifa-unica/",
+        formidable: "https://www.papernest.es/endesa/tarifas/formidable/",
+        conectaGas: "https://www.papernest.es/endesa/tarifas/conecta-gas/",
+        oneGas: "https://www.papernest.es/endesa/tarifas/one-gas/",
+        gasGeneral: "https://www.papernest.es/endesa/tarifas/gas/",
+        tarifaHappy: "https://www.papernest.es/endesa/tarifas/tarifa-happy/",
+        ultimoRecurso: "https://www.papernest.es/endesa/tarifas/tarifa-ultimo-recurso/"
+    };
+
+    function updateOptions() {
+        const supplyType = document.getElementById("supply-type").value;
+        const tariffTypeSelect = document.getElementById("tariff-type");
+        
+        // Limpiar opciones actuales
+        tariffTypeSelect.innerHTML = "";
+
+        if (supplyType === "luz") {
+            tariffTypeSelect.innerHTML = `
+                <option value="fija">Fija</option>
+                <option value="variable">Variable</option>
+                <option value="dual">Dual</option>
+                <option value="indexada">Indexada</option>
+            `;
+        } else if (supplyType === "gas") {
+            tariffTypeSelect.innerHTML = `
+                <option value="rl1">RL1 (Hasta 5.000 kWh/año)</option>
+                <option value="rl2">RL2 (De 5.000 a 15.000 kWh/año)</option>
+                <option value="rl3">RL3 (De 15.000 a 50.000 kWh/año)</option>
+            `;
+        }
+    }
+
+    function getRecommendations() {
+        const supplyType = document.getElementById("supply-type").value;
+        const tariffType = document.getElementById("tariff-type").value;
+        const consumption = document.getElementById("consumption").value;
+        const resultsDiv = document.getElementById("results");
+        const listDiv = document.getElementById("recommendation-list");
+        
+        listDiv.innerHTML = ""; // Limpiar resultados anteriores
+        let recommendations = [];
+
+        // LÓGICA DE RECOMENDACIÓN
+        if (supplyType === "luz") {
+            if (tariffType === "fija") {
+                recommendations.push({ title: "Endesa Conecta Luz", link: urls.conectaLuz, desc: "Precio fijo las 24h, ideal para no preocuparse de los horarios." });
+                recommendations.push({ title: "Endesa One Luz", link: urls.oneLuz, desc: "Tarifa 100% online con un precio estable." });
+                recommendations.push({ title: "Tarifa Happy", link: urls.tarifaHappy, desc: "Elige tus horas gratis de consumo eléctrico." });
+            } else if (tariffType === "variable" || tariffType === "indexada") {
+                recommendations.push({ title: "Tarifa PVPC (Mercado Regulado)", link: urls.tarifaPvpc, desc: "Paga la luz al precio del mercado según la hora del día." });
+                recommendations.push({ title: "Tarifa Libre Endesa", link: urls.tarifaLibre, desc: "Alternativa de mercado libre con condiciones indexadas o flexibles." });
+            } else if (tariffType === "dual") {
+                recommendations.push({ title: "Tarifa Formidable (Luz + Gas)", link: urls.formidable, desc: "Ahorra unificando tus suministros de luz y gas con grandes descuentos." });
+                recommendations.push({ title: "Tarifa Única", link: urls.tarifaUnica, desc: "Paga una cuota fija mensual personalizada según tu consumo histórico." });
+            }
+        } else if (supplyType === "gas") {
+            // Evaluamos según RL o consumo (aunque el usuario ya selecciona RL)
+            recommendations.push({ title: "Endesa Conecta Gas", link: urls.conectaGas, desc: "Tarifa de gas 100% online y sin papeleos." });
+            recommendations.push({ title: "Endesa One Gas", link: urls.oneGas, desc: "Gestiona todo desde internet con precios fijos competitivos." });
+            
+            if (tariffType === "rl1" || tariffType === "rl2") {
+                recommendations.push({ title: "Tarifa de Último Recurso (TUR Gas)", link: urls.ultimoRecurso, desc: "Tarifa regulada por el Gobierno, ideal para consumos domésticos (RL1/RL2)." });
+            }
+            
+            recommendations.push({ title: "Ver más Tarifas de Gas", link: urls.gasGeneral, desc: "Consulta todas las opciones que Endesa tiene para tu suministro de gas." });
+        }
+
+        // Renderizar las recomendaciones en el HTML
+        if (recommendations.length > 0) {
+            recommendations.forEach(rec => {
+                const card = document.createElement("div");
+                card.className = "tariff-card";
+                card.innerHTML = `
+                    <h4>${rec.title}</h4>
+                    <p>${rec.desc}</p>
+                    <a href="${rec.link}" target="_blank">Ver condiciones y contratar</a>
+                `;
+                listDiv.appendChild(card);
+            });
+            resultsDiv.style.display = "block";
+        }
+    }
+
+    // Inicializar correctamente las opciones al cargar
+    updateOptions();
+</script>
+
+</body>
+</html>

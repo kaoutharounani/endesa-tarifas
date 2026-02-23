@@ -93,15 +93,12 @@
     <select id="supply-type" onchange="updateOptions()">
         <option value="luz">Luz</option>
         <option value="gas">Gas</option>
+        <option value="dual">Dual (Luz y Gas)</option>
     </select>
 
     <label for="tariff-type">Tipo de tarifa deseada:</label>
     <select id="tariff-type">
-        <option value="fija">Fija</option>
-        <option value="variable">Variable</option>
-        <option value="dual">Dual</option>
-        <option value="indexada">Indexada</option>
-    </select>
+        </select>
 
     <label for="consumption">Tu consumo estimado anual (kWh):</label>
     <input type="number" id="consumption" placeholder="Ej: 3000" min="0">
@@ -142,14 +139,16 @@
             tariffTypeSelect.innerHTML = `
                 <option value="fija">Fija</option>
                 <option value="variable">Variable</option>
-                <option value="dual">Dual</option>
-                <option value="indexada">Indexada</option>
+                <option value="indexada">Indexada (PVPC - Mercado Regulado)</option>
             `;
         } else if (supplyType === "gas") {
             tariffTypeSelect.innerHTML = `
-                <option value="rl1">RL1 (Hasta 5.000 kWh/año)</option>
-                <option value="rl2">RL2 (De 5.000 a 15.000 kWh/año)</option>
-                <option value="rl3">RL3 (De 15.000 a 50.000 kWh/año)</option>
+                <option value="fija">Fija</option>
+                <option value="indexada">Indexada (TUR - Último Recurso)</option>
+            `;
+        } else if (supplyType === "dual") {
+            tariffTypeSelect.innerHTML = `
+                <option value="combinada">Paquete Combinado (Formidable / Única)</option>
             `;
         }
     }
@@ -170,23 +169,24 @@
                 recommendations.push({ title: "Endesa Conecta Luz", link: urls.conectaLuz, desc: "Precio fijo las 24h, ideal para no preocuparse de los horarios." });
                 recommendations.push({ title: "Endesa One Luz", link: urls.oneLuz, desc: "Tarifa 100% online con un precio estable." });
                 recommendations.push({ title: "Tarifa Happy", link: urls.tarifaHappy, desc: "Elige tus horas gratis de consumo eléctrico." });
-            } else if (tariffType === "variable" || tariffType === "indexada") {
-                recommendations.push({ title: "Tarifa PVPC (Mercado Regulado)", link: urls.tarifaPvpc, desc: "Paga la luz al precio del mercado según la hora del día." });
-                recommendations.push({ title: "Tarifa Libre Endesa", link: urls.tarifaLibre, desc: "Alternativa de mercado libre con condiciones indexadas o flexibles." });
-            } else if (tariffType === "dual") {
-                recommendations.push({ title: "Tarifa Formidable (Luz + Gas)", link: urls.formidable, desc: "Ahorra unificando tus suministros de luz y gas con grandes descuentos." });
-                recommendations.push({ title: "Tarifa Única", link: urls.tarifaUnica, desc: "Paga una cuota fija mensual personalizada según tu consumo histórico." });
+            } else if (tariffType === "variable") {
+                recommendations.push({ title: "Tarifa Libre Endesa", link: urls.tarifaLibre, desc: "Alternativa de mercado libre con condiciones flexibles." });
+            } else if (tariffType === "indexada") {
+                recommendations.push({ title: "Tarifa PVPC (Mercado Regulado)", link: urls.tarifaPvpc, desc: "Paga la luz al precio exacto del mercado según la hora del día." });
             }
-        } else if (supplyType === "gas") {
-            // Evaluamos según RL o consumo (aunque el usuario ya selecciona RL)
-            recommendations.push({ title: "Endesa Conecta Gas", link: urls.conectaGas, desc: "Tarifa de gas 100% online y sin papeleos." });
-            recommendations.push({ title: "Endesa One Gas", link: urls.oneGas, desc: "Gestiona todo desde internet con precios fijos competitivos." });
-            
-            if (tariffType === "rl1" || tariffType === "rl2") {
-                recommendations.push({ title: "Tarifa de Último Recurso (TUR Gas)", link: urls.ultimoRecurso, desc: "Tarifa regulada por el Gobierno, ideal para consumos domésticos (RL1/RL2)." });
+        } 
+        else if (supplyType === "gas") {
+            if (tariffType === "fija") {
+                recommendations.push({ title: "Endesa Conecta Gas", link: urls.conectaGas, desc: "Tarifa de gas 100% online y sin papeleos." });
+                recommendations.push({ title: "Endesa One Gas", link: urls.oneGas, desc: "Gestiona todo desde internet con precios fijos competitivos." });
+                recommendations.push({ title: "Más Tarifas de Gas", link: urls.gasGeneral, desc: "Consulta todas las opciones que Endesa tiene para tu suministro de gas." });
+            } else if (tariffType === "indexada") {
+                recommendations.push({ title: "Tarifa de Último Recurso (TUR Gas)", link: urls.ultimoRecurso, desc: "Tarifa regulada por el Gobierno (TUR), ideal para consumos domésticos." });
             }
-            
-            recommendations.push({ title: "Ver más Tarifas de Gas", link: urls.gasGeneral, desc: "Consulta todas las opciones que Endesa tiene para tu suministro de gas." });
+        } 
+        else if (supplyType === "dual") {
+            recommendations.push({ title: "Tarifa Formidable (Luz + Gas)", link: urls.formidable, desc: "Ahorra unificando tus suministros de luz y gas con grandes descuentos." });
+            recommendations.push({ title: "Tarifa Única", link: urls.tarifaUnica, desc: "Paga una cuota fija mensual personalizada según tu consumo histórico de luz y gas." });
         }
 
         // Renderizar las recomendaciones en el HTML
@@ -205,8 +205,8 @@
         }
     }
 
-    // Inicializar correctamente las opciones al cargar
-    updateOptions();
+    // Inicializar correctamente las opciones al cargar la página
+    window.onload = updateOptions;
 </script>
 
 </body>

@@ -210,6 +210,17 @@
     // Inicializar correctamente las opciones al cargar la página
     window.onload = updateOptions;
 </script>
+    <script>
+  // Cette fonction fait le pont entre l'iframe GitHub et notre site
+  function trackTool(actionName) {
+        const nom_du_tool = "endesa-tarifas";
+        window.parent.postMessage({
+          'event': 'tool_interaction',
+          'tool_name': nom_du_tool, 
+          'tool_action': actionName
+        }, '*');
+      }
+</script>
 
 </body>
 </html>
